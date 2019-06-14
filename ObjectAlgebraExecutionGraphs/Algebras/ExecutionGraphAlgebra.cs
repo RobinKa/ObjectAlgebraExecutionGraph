@@ -13,6 +13,9 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         public IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateConcatenateNode(IOutputDataPin aFrom, IOutputDataPin bFrom, IInputExecPin execTo)
             => new ConcatenateNode(aFrom, bFrom, execTo);
 
+        public IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateReverseStringNode(IOutputDataPin aFrom)
+            => new ReverseStringNode(aFrom);
+
         private class InputExecPin : IInputExecPin
         {
         }
@@ -68,6 +71,19 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
                 this.aFrom = aFrom;
                 this.bFrom = bFrom;
                 this.execTo = execTo;
+            }
+        }
+
+        private class ReverseStringNode : BaseNode
+        {
+            private IOutputDataPin aFrom;
+
+            public ReverseStringNode(IOutputDataPin aFrom)
+            {
+                idps.Add(new InputDataPin());
+                odps.Add(new OutputDataPin());
+
+                this.aFrom = aFrom;
             }
         }
     }

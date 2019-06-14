@@ -6,5 +6,6 @@ namespace ObjectAlgebraExecutionGraphs.Variants
         where TNode : IDataNode<TIDP, TODP>
     {
         public TNode CreateLiteralNode(string value);
+        public TNode CreateReverseStringNode(TODP aFrom);
     }
 }

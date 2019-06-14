@@ -15,6 +15,9 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         public IDotNode<IInputExecPin, IDotOutputExecPin, IInputDataPin, IDotOutputDataPin> CreateConcatenateNode(IDotOutputDataPin aFrom, IDotOutputDataPin bFrom, IInputExecPin execTo)
             => new ConcatenateNode(aFrom, bFrom, execTo);
 
+        public IDotNode<IInputExecPin, IDotOutputExecPin, IInputDataPin, IDotOutputDataPin> CreateReverseStringNode(IDotOutputDataPin aFrom)
+            => new ReverseStringNode(aFrom);
+
         private class InputExecPin : IInputExecPin
         {
         }
@@ -126,6 +129,31 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
                 if (bFrom != null && aFrom != bFrom)
                 {
                     builder.Append(bFrom.GenerateDotGraph(DotName));
+                }
+
+                return builder.ToString();
+            }
+        }
+
+        private class ReverseStringNode : BaseNode
+        {
+            private IDotOutputDataPin aFrom;
+
+            public ReverseStringNode(IDotOutputDataPin aFrom)
+            {
+                this.aFrom = aFrom;
+
+                idps.Add(new InputDataPin());
+                odps.Add(new OutputDataPin(this));
+            }
+
+            protected override string GenerateIncomingDotGraph()
+            {
+                StringBuilder builder = new StringBuilder();
+
+                if (aFrom != null)
+                {
+                    builder.Append(aFrom.GenerateDotGraph(DotName));
                 }
 
                 return builder.ToString();

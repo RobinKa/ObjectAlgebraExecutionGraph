@@ -16,6 +16,9 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateConcatenateNode(ICSharpTranslatableOutputDataPin aFrom, ICSharpTranslatableOutputDataPin bFrom, ICSharpTranslatableInputExecPin execTo)
             => new ConcatenateNode(aFrom, bFrom, execTo);
 
+        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateReverseStringNode(ICSharpTranslatableOutputDataPin aFrom)
+            => new ReverseStringNode(aFrom);
+
         private class InputExecPin : ICSharpTranslatableInputExecPin
         {
             public string Label { get; } = RandomGenerator.GetRandomLowerLetters(16);
@@ -66,7 +69,13 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
             protected readonly IList<ICSharpTranslatableOutputExecPin> oxps = new List<ICSharpTranslatableOutputExecPin>();
 
             public virtual bool IsPure { get; }
-            public virtual string PureFunctionName { get; } = "";
+            public string PureFunctionName { get; }
+            private static int nodeCounter;
+
+            public BaseCSharpTranslatableNode()
+            {
+                PureFunctionName = $"{GetType().Name}_{nodeCounter++}";
+            }
 
             public virtual string TranslateVariables()
             {
@@ -93,6 +102,8 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
             public ConcatenateNode(ICSharpTranslatableOutputDataPin aFrom, ICSharpTranslatableOutputDataPin bFrom, ICSharpTranslatableInputExecPin execTo)
             {
                 ixps.Add(new InputExecPin());
+                idps.Add(new InputDataPin()); // TODO: Use these instead of using the passed output data pins directly.
+                idps.Add(new InputDataPin());
                 odps.Add(new OutputDataPin(this));
                 oxps.Add(new OutputExecPin());
 
@@ -140,7 +151,6 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         private class LiteralNode : BaseCSharpTranslatableNode
         {
             public override bool IsPure => true;
-            public override string PureFunctionName { get; } = RandomGenerator.GetRandomLowerLetters(16);
 
             private string value;
 
@@ -162,6 +172,38 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
                 builder.Append($"void {PureFunctionName}()\n");
                 builder.Append("{\n");
                 //builder.Append($"{OutputDataPins.Single().VariableName} = {value};\n");
+                builder.Append("}\n");
+
+                return builder.ToString();
+            }
+        }
+
+        private class ReverseStringNode : BaseCSharpTranslatableNode
+        {
+            public override bool IsPure => true;
+
+            private ICSharpTranslatableOutputDataPin aFrom;
+
+            public ReverseStringNode(ICSharpTranslatableOutputDataPin aFrom)
+            {
+                this.aFrom = aFrom;
+
+                idps.Add(new InputDataPin());
+                odps.Add(new OutputDataPin(this));
+            }
+
+            public override string TranslateVariables()
+            {
+                return $"var {OutputDataPins.Single().VariableName} = default(string);\n";
+            }
+
+            public override string TranslatePureFunctions()
+            {
+                StringBuilder builder = new StringBuilder();
+
+                builder.Append($"void {PureFunctionName}()\n");
+                builder.Append("{\n");
+                builder.Append($"{OutputDataPins.Single().VariableName} = string.Concat({aFrom.VariableName}.Reverse());\n");
                 builder.Append("}\n");
 
                 return builder.ToString();
