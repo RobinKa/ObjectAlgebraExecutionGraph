@@ -24,6 +24,15 @@ namespace ObjectAlgebraExecutionGraphs
             var factory = new ExecutionGraphAlgebra();
             var executionGraph = CreateExecutionGraph(null, factory);
 
+            // Generate a DOT graph from the same execution graph's last node
+            var dotFactory = new DotExecutionGraphAlgebra();
+            var dotExecutionGraph = CreateExecutionGraph(null, dotFactory);
+            Console.WriteLine("--- DOT graph ---");
+            Console.WriteLine("graph dotGraph {");
+            Console.Write(dotExecutionGraph.Last().GenerateDotGraph(null));
+            Console.WriteLine("}");
+            Console.WriteLine();
+
             // Create the same execution graph, but now with elements translatable to C#
             var csharpTranslatableFactory = new CSharpTranslatableGraphAlgebra();
             var csharpTranslatableGraph = CreateExecutionGraph(null, csharpTranslatableFactory);
