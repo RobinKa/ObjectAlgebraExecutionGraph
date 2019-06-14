@@ -10,10 +10,10 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 {
     public class CSharpTranslatableGraphAlgebra : IExecutionGraphAlgebra<ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin>, ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin>
     {
-        public override ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateLiteralNode(string value)
+        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateLiteralNode(string value)
             => new LiteralNode(value);
 
-        public override ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateConcatenateNode(ICSharpTranslatableOutputDataPin aFrom, ICSharpTranslatableOutputDataPin bFrom, ICSharpTranslatableInputExecPin execTo)
+        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateConcatenateNode(ICSharpTranslatableOutputDataPin aFrom, ICSharpTranslatableOutputDataPin bFrom, ICSharpTranslatableInputExecPin execTo)
             => new ConcatenateNode(aFrom, bFrom, execTo);
 
         private class InputExecPin : ICSharpTranslatableInputExecPin

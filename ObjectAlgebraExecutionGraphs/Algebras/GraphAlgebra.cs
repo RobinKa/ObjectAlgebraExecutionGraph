@@ -6,10 +6,10 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 {
     public class ExecutionGraphAlgebra : IExecutionGraphAlgebra<INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>, IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>
     {
-        public override INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateLiteralNode(string value)
+        public INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateLiteralNode(string value)
             => new LiteralNode(value);
 
-        public override INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateConcatenateNode(IOutputDataPin aFrom, IOutputDataPin bFrom, IInputExecPin execTo)
+        public INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateConcatenateNode(IOutputDataPin aFrom, IOutputDataPin bFrom, IInputExecPin execTo)
             => new ConcatenateNode(aFrom, bFrom, execTo);
 
         private class InputExecPin : IInputExecPin
