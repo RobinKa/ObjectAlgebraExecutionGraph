@@ -61,7 +61,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
                 if (toName != null)
                 {
-                    builder.AppendLine($"{DotName} -> {toName}");
+                    builder.AppendLine($"{DotName} -> {toName};");
                 }
 
                 builder.Append(GenerateIncomingDotGraph());

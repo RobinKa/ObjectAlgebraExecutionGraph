@@ -28,7 +28,7 @@ namespace ObjectAlgebraExecutionGraphs
             var dotFactory = new DotExecutionGraphAlgebra();
             var dotExecutionGraph = CreateExecutionGraph(null, dotFactory);
             Console.WriteLine("--- DOT graph ---");
-            Console.WriteLine("graph dotGraph {");
+            Console.WriteLine("digraph dotGraph {");
             Console.Write(dotExecutionGraph.Last().GenerateDotGraph(null));
             Console.WriteLine("}");
             Console.WriteLine();
