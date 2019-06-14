@@ -1,6 +1,6 @@
 ﻿using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
 
-namespace ObjectAlgebraExecutionGraphs.Behaviors.DataGraph
+namespace ObjectAlgebraExecutionGraphs.Behaviors.DotGraph
 {
     /// <summary>
     /// A graph node holding a collection of pins. Can create dot graphs for visualization.

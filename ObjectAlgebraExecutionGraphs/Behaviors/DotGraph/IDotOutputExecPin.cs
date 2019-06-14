@@ -1,8 +1,8 @@
-﻿using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
+﻿using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
 
-namespace ObjectAlgebraExecutionGraphs.Behaviors.DotFileGraph
+namespace ObjectAlgebraExecutionGraphs.Behaviors.DotGraph
 {
-    public interface IDotOutputDataPin : IOutputDataPin
+    public interface IDotOutputExecPin : IOutputExecPin
     {
         /// <summary>
         /// Generates a DOT graph for this pin's node and its incoming nodes recursively.

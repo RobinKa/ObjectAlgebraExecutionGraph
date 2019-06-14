@@ -1,9 +1,8 @@
 ﻿using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
-using ObjectAlgebraExecutionGraphs.Behaviors.DotFileGraph;
+using ObjectAlgebraExecutionGraphs.Behaviors.DotGraph;
 using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
 using ObjectAlgebraExecutionGraphs.Variants;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace ObjectAlgebraExecutionGraphs.Algebras
