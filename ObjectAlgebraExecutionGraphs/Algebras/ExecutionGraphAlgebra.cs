@@ -29,7 +29,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         {
         }
 
-        private class BaseNode : IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>
+        private abstract class BaseNode : IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>
         {
             public IEnumerable<IInputExecPin> InputExecPins => ixps;
             public IEnumerable<IOutputExecPin> OutputExecPins => oxps;

@@ -37,19 +37,20 @@ namespace ObjectAlgebraExecutionGraphs
             var csharpTranslatableFactory = new CSharpTranslatableGraphAlgebra();
             var csharpTranslatableGraph = CreateExecutionGraph(null, csharpTranslatableFactory);
 
+            Console.WriteLine("--- C# translated graph ---");
             Console.WriteLine("void Func()");
             Console.WriteLine("{");
             foreach (var node in csharpTranslatableGraph)
             {
-                Console.WriteLine(node.TranslateVariables());
+                Console.Write(node.TranslateVariables());
             }
             foreach (var node in csharpTranslatableGraph)
             {
-                Console.WriteLine(node.TranslatePureFunctions());
+                Console.Write(node.TranslatePureFunctions());
             }
             foreach (var node in csharpTranslatableGraph)
             {
-                Console.WriteLine(node.TranslateStates());
+                Console.Write(node.TranslateStates());
             }
             Console.WriteLine("}");
         }
