@@ -1,6 +1,6 @@
 ﻿using ObjectAlgebraExecutionGraphs.Algebras;
 using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
-using ObjectAlgebraExecutionGraphs.Variants.ExecutionGraph;
+using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ namespace ObjectAlgebraExecutionGraphs
     internal static class Program
     {
         private static IEnumerable<TNode> CreateExecutionGraph<TNode, TIXP, TOXP, TIDP, TODP>(TIXP next, IExecutionGraphAlgebra<TNode, TIXP, TOXP, TIDP, TODP> factory)
-            where TNode : INode<TIXP, TOXP, TIDP, TODP>
+            where TNode : IExecutionNode<TIXP, TOXP, TIDP, TODP>
         {
             var literalNode = factory.CreateLiteralNode("\"hello\"");
             var concatenateNode = factory.CreateConcatenateNode(literalNode.OutputDataPins.Single(), literalNode.OutputDataPins.Single(), next);

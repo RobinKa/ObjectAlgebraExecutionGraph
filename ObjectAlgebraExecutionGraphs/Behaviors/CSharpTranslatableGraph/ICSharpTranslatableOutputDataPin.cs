@@ -1,4 +1,4 @@
-﻿using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
+﻿using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
 {

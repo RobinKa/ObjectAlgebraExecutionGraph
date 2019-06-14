@@ -1,6 +1,6 @@
 ﻿using ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph;
 using ObjectAlgebraExecutionGraphs.Utility;
-using ObjectAlgebraExecutionGraphs.Variants.ExecutionGraph;
+using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,15 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
 using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
-using ObjectAlgebraExecutionGraphs.Variants.ExecutionGraph;
+using ObjectAlgebraExecutionGraphs.Variants;
+using System.Collections.Generic;
 
 namespace ObjectAlgebraExecutionGraphs.Algebras
 {
-    public class ExecutionGraphAlgebra : IExecutionGraphAlgebra<INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>, IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>
+    public class ExecutionGraphAlgebra : IExecutionGraphAlgebra<IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>, IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>
     {
-        public INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateLiteralNode(string value)
+        public IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateLiteralNode(string value)
             => new LiteralNode(value);
 
-        public INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateConcatenateNode(IOutputDataPin aFrom, IOutputDataPin bFrom, IInputExecPin execTo)
+        public IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin> CreateConcatenateNode(IOutputDataPin aFrom, IOutputDataPin bFrom, IInputExecPin execTo)
             => new ConcatenateNode(aFrom, bFrom, execTo);
 
         private class InputExecPin : IInputExecPin
@@ -28,7 +29,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         {
         }
 
-        private class BaseNode : INode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>
+        private class BaseNode : IExecutionNode<IInputExecPin, IOutputExecPin, IInputDataPin, IOutputDataPin>
         {
             public IEnumerable<IInputExecPin> InputExecPins => ixps;
             public IEnumerable<IOutputExecPin> OutputExecPins => oxps;

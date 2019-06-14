@@ -9,7 +9,7 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
     /// <typeparam name="TOXP">Output execution pin type</typeparam>
     /// <typeparam name="TIDP">Input data pin type</typeparam>
     /// <typeparam name="TODP">Output data pin type</typeparam>
-    public interface ICSharpTranslatableNode<TIXP, TOXP, TIDP, TODP> : INode<TIXP, TOXP, TIDP, TODP>
+    public interface ICSharpTranslatableNode<TIXP, TOXP, TIDP, TODP> : IExecutionNode<TIXP, TOXP, TIDP, TODP>
     {
         /// <summary>
         /// Translate all variables of this node to code.
