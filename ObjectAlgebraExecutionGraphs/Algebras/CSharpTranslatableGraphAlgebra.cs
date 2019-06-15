@@ -4,20 +4,23 @@ using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace ObjectAlgebraExecutionGraphs.Algebras
 {
-    public class CSharpTranslatableGraphAlgebra : IExecutionGraphAlgebra<ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin>, ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin>
+    public class CSharpTranslatableGraphAlgebra : IExecutionGraphAlgebra<Type, ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>>, ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>>
     {
-        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateLiteralNode(string value)
-            => new LiteralNode(value);
+        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>> CreateLiteralNode(Type type, object value)
+            => new LiteralNode(type, value);
 
-        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateConcatenateNode(ICSharpTranslatableOutputDataPin aFrom, ICSharpTranslatableOutputDataPin bFrom, ICSharpTranslatableInputExecPin execTo)
+        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>> CreateConcatenateNode(ICSharpTranslatableOutputDataPin<Type> aFrom, ICSharpTranslatableOutputDataPin<Type> bFrom, ICSharpTranslatableInputExecPin execTo)
             => new ConcatenateNode(aFrom, bFrom, execTo);
 
-        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> CreateReverseStringNode(ICSharpTranslatableOutputDataPin aFrom)
+        public ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>> CreateReverseStringNode(ICSharpTranslatableOutputDataPin<Type> aFrom)
             => new ReverseStringNode(aFrom);
+
+        public Type TypeFromString(string typeString) => Type.GetType(typeString);
 
         private class InputExecPin : ICSharpTranslatableInputExecPin
         {
@@ -29,14 +32,16 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
         }
 
-        private class InputDataPin : ICSharpTranslatableInputDataPin
+        private class InputDataPin : ICSharpTranslatableInputDataPin<Type>
         {
             public string VariableName { get; } = RandomGenerator.GetRandomLowerLetters(16);
+            public Type Type { get; }
 
-            private readonly ICSharpTranslatableOutputDataPin incomingPin;
+            private readonly ICSharpTranslatableOutputDataPin<Type> incomingPin;
 
-            public InputDataPin(ICSharpTranslatableOutputDataPin incomingPin)
+            public InputDataPin(Type type, ICSharpTranslatableOutputDataPin<Type> incomingPin)
             {
+                Type = type;
                 this.incomingPin = incomingPin;
             }
 
@@ -51,16 +56,18 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
             }
         }
 
-        private class OutputDataPin : ICSharpTranslatableOutputDataPin
+        private class OutputDataPin : ICSharpTranslatableOutputDataPin<Type>
         {
             public string VariableName { get; } = RandomGenerator.GetRandomLowerLetters(16);
             public bool IsPure => node.IsPure;
+            public Type Type { get; }
 
-            private readonly ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> node;
+            private readonly ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>> node;
 
-            public OutputDataPin(ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin> node)
+            public OutputDataPin(ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>> node, Type type)
             {
                 this.node = node;
+                Type = type;
             }
 
             public IEnumerable<string> TranslateCallPureFunction()
@@ -74,15 +81,15 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
             }
         }
 
-        private abstract class BaseCSharpTranslatableNode : ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin, ICSharpTranslatableOutputDataPin>
+        private abstract class BaseCSharpTranslatableNode : ICSharpTranslatableNode<ICSharpTranslatableInputExecPin, ICSharpTranslatableOutputExecPin, ICSharpTranslatableInputDataPin<Type>, ICSharpTranslatableOutputDataPin<Type>>
         {
             public IEnumerable<ICSharpTranslatableInputExecPin> InputExecPins => ixps;
             public IEnumerable<ICSharpTranslatableOutputExecPin> OutputExecPins => oxps;
-            public IEnumerable<ICSharpTranslatableInputDataPin> InputDataPins => idps;
-            public IEnumerable<ICSharpTranslatableOutputDataPin> OutputDataPins => odps;
+            public IEnumerable<ICSharpTranslatableInputDataPin<Type>> InputDataPins => idps;
+            public IEnumerable<ICSharpTranslatableOutputDataPin<Type>> OutputDataPins => odps;
             
-            protected readonly IList<ICSharpTranslatableInputDataPin> idps = new List<ICSharpTranslatableInputDataPin>();
-            protected readonly IList<ICSharpTranslatableOutputDataPin> odps = new List<ICSharpTranslatableOutputDataPin>();
+            protected readonly IList<ICSharpTranslatableInputDataPin<Type>> idps = new List<ICSharpTranslatableInputDataPin<Type>>();
+            protected readonly IList<ICSharpTranslatableOutputDataPin<Type>> odps = new List<ICSharpTranslatableOutputDataPin<Type>>();
             protected readonly IList<ICSharpTranslatableInputExecPin> ixps = new List<ICSharpTranslatableInputExecPin>();
             protected readonly IList<ICSharpTranslatableOutputExecPin> oxps = new List<ICSharpTranslatableOutputExecPin>();
 
@@ -127,12 +134,12 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         {
             private readonly ICSharpTranslatableInputExecPin execTo;
 
-            public ConcatenateNode(ICSharpTranslatableOutputDataPin aFrom, ICSharpTranslatableOutputDataPin bFrom, ICSharpTranslatableInputExecPin execTo)
+            public ConcatenateNode(ICSharpTranslatableOutputDataPin<Type> aFrom, ICSharpTranslatableOutputDataPin<Type> bFrom, ICSharpTranslatableInputExecPin execTo)
             {
                 ixps.Add(new InputExecPin());
-                idps.Add(new InputDataPin(aFrom));
-                idps.Add(new InputDataPin(bFrom));
-                odps.Add(new OutputDataPin(this));
+                idps.Add(new InputDataPin(typeof(string), aFrom));
+                idps.Add(new InputDataPin(typeof(string), bFrom));
+                odps.Add(new OutputDataPin(this, typeof(string)));
                 oxps.Add(new OutputExecPin());
 
                 this.execTo = execTo;
@@ -175,17 +182,19 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         {
             public override bool IsPure => true;
 
-            private string value;
+            private object value;
 
-            public LiteralNode(string value)
+            public LiteralNode(Type type, object value)
             {
                 this.value = value;
-                odps.Add(new OutputDataPin(this));
+                odps.Add(new OutputDataPin(this, type));
             }
 
             public override string TranslateVariables()
             {
-                return $"const var {OutputDataPins.Single().VariableName} = {value};\n";
+                var odp = OutputDataPins.Single();
+
+                return $"const {odp.Type.FullName} {odp.VariableName} = {value};\n";
             }
 
             public override string TranslatePureFunctions()
@@ -205,10 +214,10 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         {
             public override bool IsPure => true;
 
-            public ReverseStringNode(ICSharpTranslatableOutputDataPin aFrom)
+            public ReverseStringNode(ICSharpTranslatableOutputDataPin<Type> aFrom)
             {
-                idps.Add(new InputDataPin(aFrom));
-                odps.Add(new OutputDataPin(this));
+                idps.Add(new InputDataPin(typeof(string), aFrom));
+                odps.Add(new OutputDataPin(this, typeof(string)));
             }
 
             public override string TranslateVariables()

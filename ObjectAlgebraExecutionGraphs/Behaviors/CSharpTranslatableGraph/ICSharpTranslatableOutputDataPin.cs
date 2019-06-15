@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
 {
-    public interface ICSharpTranslatableOutputDataPin : IOutputDataPin
+    public interface ICSharpTranslatableOutputDataPin<TType> : IOutputDataPin<TType>
     {
         /// <summary>
         /// Name for the variable of this pin in code.

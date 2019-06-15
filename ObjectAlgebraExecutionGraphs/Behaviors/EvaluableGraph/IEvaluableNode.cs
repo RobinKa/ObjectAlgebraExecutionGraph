@@ -10,6 +10,6 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.EvaluableGraph
     /// <typeparam name="TODP">Output data pin type</typeparam>
     public interface IEvaluableNode<TIDP, TODP> : IDataNode<TIDP, TODP>
     {
-        public IReadOnlyDictionary<TODP, string> Evaluate();
+        public IReadOnlyDictionary<TODP, object> Evaluate();
     }
 }

@@ -1,9 +1,10 @@
 ﻿using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
+using System;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.EvaluableGraph
 {
-    public interface IEvaluableOutputDataPin : IOutputDataPin
+    public interface IEvaluableOutputDataPin : IOutputDataPin<Type>
     {
-        string Evaluate();
+        object Evaluate();
     }
 }

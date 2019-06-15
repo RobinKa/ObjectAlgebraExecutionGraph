@@ -2,7 +2,7 @@
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.DotGraph
 {
-    public interface IDotOutputDataPin : IOutputDataPin
+    public interface IDotOutputDataPin<TType> : IOutputDataPin<TType>
     {
         /// <summary>
         /// Generates a DOT graph for this pin's node and its incoming nodes recursively.

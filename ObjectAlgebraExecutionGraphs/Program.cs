@@ -10,20 +10,22 @@ namespace ObjectAlgebraExecutionGraphs
 {
     internal static class Program
     {
-        private static IEnumerable<TNode> CreateDataGraph<TNode, TIDP, TODP>(IDataGraphAlgebra<TNode, TIDP, TODP> factory)
+        private static IEnumerable<TNode> CreateDataGraph<TType, TNode, TIDP, TODP>(IDataGraphAlgebra<TType, TNode, TIDP, TODP> factory)
            where TNode : IDataNode<TIDP, TODP>
         {
-            var literalNode = factory.CreateLiteralNode("\"hello\"");
+            var literalType = factory.TypeFromString(typeof(string).AssemblyQualifiedName);
+            var literalNode = factory.CreateLiteralNode(literalType, "\"hello\"");
             var reverseStringNode = factory.CreateReverseStringNode(literalNode.OutputDataPins.Single());
             var reverseStringNode2 = factory.CreateReverseStringNode(reverseStringNode.OutputDataPins.Single());
 
             return new[] { literalNode, reverseStringNode, reverseStringNode2 };
         }
 
-        private static IEnumerable<TNode> CreateExecutionGraph<TNode, TIXP, TOXP, TIDP, TODP>(TIXP next, IExecutionGraphAlgebra<TNode, TIXP, TOXP, TIDP, TODP> factory)
+        private static IEnumerable<TNode> CreateExecutionGraph<TType, TNode, TIXP, TOXP, TIDP, TODP>(TIXP next, IExecutionGraphAlgebra<TType, TNode, TIXP, TOXP, TIDP, TODP> factory)
             where TNode : IExecutionNode<TIXP, TOXP, TIDP, TODP>
         {
-            var literalNode = factory.CreateLiteralNode("\"hello\"");
+            var literalType = factory.TypeFromString(typeof(string).AssemblyQualifiedName);
+            var literalNode = factory.CreateLiteralNode(literalType, "\"hello\"");
             var reverseStringNode = factory.CreateReverseStringNode(literalNode.OutputDataPins.Single());
             var concatenateNode = factory.CreateConcatenateNode(literalNode.OutputDataPins.Single(), reverseStringNode.OutputDataPins.Single(), next);
 
@@ -32,11 +34,7 @@ namespace ObjectAlgebraExecutionGraphs
 
         private static void RunExecutionGraphExamples()
         {
-            // Create an execution graph without any functionality
-            var factory = new ExecutionGraphAlgebra();
-            var executionGraph = CreateExecutionGraph(null, factory);
-
-            // Generate a DOT graph from the same execution graph's last node
+            // Generate a DOT graph from the an execution graph's last node
             var dotFactory = new DotExecutionGraphAlgebra();
             var dotExecutionGraph = CreateExecutionGraph(null, dotFactory);
             Console.WriteLine("--- DOT graph ---");
@@ -73,6 +71,7 @@ namespace ObjectAlgebraExecutionGraphs
             var evaluableFactory = new EvaluableGraphAlgebra();
             var evaluableDataGraph = CreateDataGraph(evaluableFactory);
 
+            Console.Write("--- Evaluable graph ---");
             Console.WriteLine("Last node outputs:");
             foreach ((var odp, var value) in evaluableDataGraph.Last().Evaluate())
             {
@@ -103,16 +102,19 @@ namespace ObjectAlgebraExecutionGraphs
             {
                 Console.Write(node.TranslatePureFunctions());
             }
-            foreach (var node in csharpTranslatableGraph)
-            {
-                Console.Write(node.TranslateStates());
-            }
+
+            // Since we don't have any states, translate a call to the last pure node instead.
+            Console.WriteLine(string.Join("\n", csharpTranslatableGraph.Last().TranslateCallPureFunction().Distinct()));
+
             Console.WriteLine("}");
         }
 
         private static void Main()
         {
-            //RunDataGraphExamples();
+            Console.WriteLine("### Data graph examples ###");
+            RunDataGraphExamples();
+
+            Console.WriteLine("### Execution graph examples ###");
             RunExecutionGraphExamples();
         }
     }
