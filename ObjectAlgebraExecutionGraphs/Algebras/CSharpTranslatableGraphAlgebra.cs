@@ -130,7 +130,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
             public ConcatenateNode(ICSharpTranslatableOutputDataPin aFrom, ICSharpTranslatableOutputDataPin bFrom, ICSharpTranslatableInputExecPin execTo)
             {
                 ixps.Add(new InputExecPin());
-                idps.Add(new InputDataPin(aFrom)); // TODO: Use these instead of using the passed output data pins directly.
+                idps.Add(new InputDataPin(aFrom));
                 idps.Add(new InputDataPin(bFrom));
                 odps.Add(new OutputDataPin(this));
                 oxps.Add(new OutputExecPin());
@@ -185,7 +185,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
             public override string TranslateVariables()
             {
-                return $"var {OutputDataPins.Single().VariableName} = {value};\n";
+                return $"const var {OutputDataPins.Single().VariableName} = {value};\n";
             }
 
             public override string TranslatePureFunctions()
