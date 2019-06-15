@@ -63,7 +63,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
         private abstract class BaseNode : IDotNode<IInputExecPin, IDotOutputExecPin, IInputDataPin<string>, IDotOutputDataPin<string>>
         {
-            public string DotName => $"Node_{nodeId}";
+            public string DotName => $"{GetType().Name}_{nodeId}";
 
             private static int nodeCounter = 0;
             private readonly int nodeId = nodeCounter++;
