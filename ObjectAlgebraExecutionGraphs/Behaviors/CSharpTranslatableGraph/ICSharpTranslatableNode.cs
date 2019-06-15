@@ -1,4 +1,5 @@
 ﻿using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
+using System.Collections.Generic;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
 {
@@ -44,9 +45,6 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
         /// Translates to code that calls this node's local function.
         /// </summary>
         /// <returns>Code for calling this node's local function.</returns>
-        public string TranslateCallPureFunction()
-        {
-            return $"{PureFunctionName}();\n";
-        }
+        public IEnumerable<string> TranslateCallPureFunction();
     }
 }

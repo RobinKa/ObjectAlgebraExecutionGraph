@@ -24,9 +24,10 @@ namespace ObjectAlgebraExecutionGraphs
             where TNode : IExecutionNode<TIXP, TOXP, TIDP, TODP>
         {
             var literalNode = factory.CreateLiteralNode("\"hello\"");
-            var concatenateNode = factory.CreateConcatenateNode(literalNode.OutputDataPins.Single(), literalNode.OutputDataPins.Single(), next);
+            var reverseStringNode = factory.CreateReverseStringNode(literalNode.OutputDataPins.Single());
+            var concatenateNode = factory.CreateConcatenateNode(literalNode.OutputDataPins.Single(), reverseStringNode.OutputDataPins.Single(), next);
 
-            return new[] { literalNode, concatenateNode };
+            return new[] { literalNode, reverseStringNode, concatenateNode };
         }
 
         private static void RunExecutionGraphExamples()
@@ -111,7 +112,8 @@ namespace ObjectAlgebraExecutionGraphs
 
         private static void Main()
         {
-            RunDataGraphExamples();
+            //RunDataGraphExamples();
+            RunExecutionGraphExamples();
         }
     }
 }

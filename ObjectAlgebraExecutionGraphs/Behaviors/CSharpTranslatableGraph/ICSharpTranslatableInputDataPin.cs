@@ -1,4 +1,5 @@
 ﻿using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
+using System.Collections.Generic;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
 {
@@ -8,5 +9,7 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
         /// Name of the pin's variable in code.
         /// </summary>
         string VariableName { get; }
+
+        IEnumerable<string> TranslateCallPureFunction();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
+using System.Collections.Generic;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
 {
@@ -18,6 +19,6 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
         /// Proxy for translating to code for calling this pin's node's call to its local function.
         /// </summary>
         /// <returns>Code for calling this pin's node's call to its local function</returns>
-        string TranslateCallPureFunction();
+        IEnumerable<string> TranslateCallPureFunction();
     }
 }
