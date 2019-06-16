@@ -6,7 +6,6 @@ using ObjectAlgebraExecutionGraphs.Utility;
 using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ObjectAlgebraExecutionGraphs
 {

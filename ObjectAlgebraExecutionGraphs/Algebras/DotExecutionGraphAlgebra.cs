@@ -3,7 +3,6 @@ using ObjectAlgebraExecutionGraphs.Utility;
 using ObjectAlgebraExecutionGraphs.Variants;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ObjectAlgebraExecutionGraphs.Algebras
 {
