@@ -1,10 +1,11 @@
-﻿using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
+﻿using ObjectAlgebraExecutionGraphs.Utility;
+using System.Collections.Generic;
 
 namespace ObjectAlgebraExecutionGraphs.Variants
 {
-    public interface IExecutionGraphAlgebra<TType, TNode, TIXP, TOXP, TIDP, TODP> : IDataGraphAlgebra<TType, TNode, TIDP, TODP>
-        where TNode : IExecutionNode<TIXP, TOXP, TIDP, TODP>
+    public interface IExecutionGraphAlgebra<TType, TNode>
     {
-        public TNode CreateConcatenateNode(TODP aFrom, TODP bFrom, TIXP execTo);
+        public TNode CreateConcatenateNode();
+        public string TranslateImperative(IEnumerable<TNode> nodes, IEnumerable<NodeConnection<TNode>> dataConnections, IEnumerable<NodeConnection<TNode>> execConnections);
     }
 }

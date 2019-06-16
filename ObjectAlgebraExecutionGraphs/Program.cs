@@ -1,6 +1,8 @@
 ﻿using ObjectAlgebraExecutionGraphs.Algebras;
-using ObjectAlgebraExecutionGraphs.Behaviors.DataGraph;
-using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
+using ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph;
+using ObjectAlgebraExecutionGraphs.Behaviors.DotGraph;
+using ObjectAlgebraExecutionGraphs.Behaviors.EvaluableGraph;
+using ObjectAlgebraExecutionGraphs.Utility;
 using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
@@ -10,103 +12,82 @@ namespace ObjectAlgebraExecutionGraphs
 {
     internal static class Program
     {
-        private static IEnumerable<TNode> CreateDataGraph<TType, TNode, TIDP, TODP>(IDataGraphAlgebra<TType, TNode, TIDP, TODP> factory)
-           where TNode : IDataNode<TIDP, TODP>
+        private static (IEnumerable<TNode> nodes, IEnumerable<NodeConnection<TNode>> dataConnections) CreateDataGraph<TType, TNode, TFactory>(TFactory factory)
+            where TFactory : IDataGraphAlgebra<TType, TNode>
         {
             var literalType = factory.TypeFromString(typeof(string).AssemblyQualifiedName);
             var literalNode = factory.CreateLiteralNode(literalType, "\"hello\"");
-            var reverseStringNode = factory.CreateReverseStringNode(literalNode.OutputDataPins.Single());
-            var reverseStringNode2 = factory.CreateReverseStringNode(reverseStringNode.OutputDataPins.Single());
+            var reverseStringNode = factory.CreateReverseStringNode();
+            var reverseStringNode2 = factory.CreateReverseStringNode();
 
-            return new[] { literalNode, reverseStringNode, reverseStringNode2 };
+            var literalToReverse = new NodeConnection<TNode>(literalNode, 0, reverseStringNode, 0);
+            var reverseToReverse2 = new NodeConnection<TNode>(reverseStringNode, 0, reverseStringNode2, 0);
+
+            return (new[] { literalNode, reverseStringNode, reverseStringNode2 }, new[] { literalToReverse, reverseToReverse2 });
         }
 
-        private static IEnumerable<TNode> CreateExecutionGraph<TType, TNode, TIXP, TOXP, TIDP, TODP>(TIXP next, IExecutionGraphAlgebra<TType, TNode, TIXP, TOXP, TIDP, TODP> factory)
-            where TNode : IExecutionNode<TIXP, TOXP, TIDP, TODP>
+        private static (IEnumerable<TNode> nodes, IEnumerable<NodeConnection<TNode>> dataConnections, IReadOnlyList<NodeConnection<TNode>> execConnections) CreateExecutionGraph<TType, TNode, TFactory>(TFactory factory)
+            where TFactory : IDataGraphAlgebra<TType, TNode>, IExecutionGraphAlgebra<TType, TNode>
         {
             var literalType = factory.TypeFromString(typeof(string).AssemblyQualifiedName);
             var literalNode = factory.CreateLiteralNode(literalType, "\"hello\"");
-            var reverseStringNode = factory.CreateReverseStringNode(literalNode.OutputDataPins.Single());
-            var concatenateNode = factory.CreateConcatenateNode(literalNode.OutputDataPins.Single(), reverseStringNode.OutputDataPins.Single(), next);
+            var reverseStringNode = factory.CreateReverseStringNode();
+            var concatenateNode = factory.CreateConcatenateNode();
 
-            return new[] { literalNode, reverseStringNode, concatenateNode };
+            var literalToReverse = new NodeConnection<TNode>(literalNode, 0, reverseStringNode, 0);
+            var literalToConcatenate = new NodeConnection<TNode>(literalNode, 0, concatenateNode, 0);
+            var reverseToConcatenate = new NodeConnection<TNode>(reverseStringNode, 0, concatenateNode, 1);
+
+            return (new[] { literalNode, reverseStringNode, concatenateNode }, new[] { literalToReverse, literalToConcatenate, reverseToConcatenate }, Array.Empty<NodeConnection<TNode>>());
         }
 
         private static void RunExecutionGraphExamples()
         {
             // Generate a DOT graph from the an execution graph's last node
             var dotFactory = new DotExecutionGraphAlgebra();
-            var dotExecutionGraph = CreateExecutionGraph(null, dotFactory);
+            var dotExecutionGraph = CreateExecutionGraph<string, IDotNode, DotExecutionGraphAlgebra>(dotFactory);
             Console.WriteLine("--- DOT graph ---");
-            Console.WriteLine("digraph dotGraph {");
-            Console.Write(dotExecutionGraph.Last().GenerateDotGraph(null));
-            Console.WriteLine("}");
+            Console.WriteLine(dotFactory.TranslateImperative(dotExecutionGraph.nodes, dotExecutionGraph.dataConnections, dotExecutionGraph.execConnections));
             Console.WriteLine();
 
             // Create the same execution graph, but now with elements translatable to C#
             var csharpTranslatableFactory = new CSharpTranslatableGraphAlgebra();
-            var csharpTranslatableGraph = CreateExecutionGraph(null, csharpTranslatableFactory);
+            var csharpTranslatableGraph = CreateExecutionGraph<Type, ICSharpTranslatableNode, CSharpTranslatableGraphAlgebra>(csharpTranslatableFactory);
 
             Console.WriteLine("--- C# translated graph ---");
-            Console.WriteLine("void Func()");
-            Console.WriteLine("{");
-            foreach (var node in csharpTranslatableGraph)
-            {
-                Console.Write(node.TranslateVariables());
-            }
-            foreach (var node in csharpTranslatableGraph)
-            {
-                Console.Write(node.TranslatePureFunctions());
-            }
-            foreach (var node in csharpTranslatableGraph)
-            {
-                Console.Write(node.TranslateStates());
-            }
-            Console.WriteLine("}");
+            Console.WriteLine(csharpTranslatableFactory.TranslateImperative(csharpTranslatableGraph.nodes, csharpTranslatableGraph.dataConnections, csharpTranslatableGraph.execConnections));
         }
 
         private static void RunDataGraphExamples()
         {
             // Create an evaluable data graph and evaluate it
             var evaluableFactory = new EvaluableGraphAlgebra();
-            var evaluableDataGraph = CreateDataGraph(evaluableFactory);
+            (var evaluableNodes, var evaluableConnections) = CreateDataGraph<Type, IEvaluableNode, EvaluableGraphAlgebra>(evaluableFactory);
 
             Console.Write("--- Evaluable graph ---");
             Console.WriteLine("Last node outputs:");
-            foreach ((var odp, var value) in evaluableDataGraph.Last().Evaluate())
+            /*foreach ((var odp, var value) in evaluableNodes.Last().Evaluate()
             {
                 Console.WriteLine(value);
-            }
+            }*/
 
             // Generate a DOT graph from the same data graph's last node
             var dotFactory = new DotExecutionGraphAlgebra();
-            var dotExecutionGraph = CreateDataGraph(dotFactory);
+            (var dotNodes, var dotConnections) = CreateDataGraph<string, IDotNode, DotExecutionGraphAlgebra>(dotFactory);
             Console.WriteLine("--- DOT graph ---");
-            Console.WriteLine("digraph dotGraph {");
-            Console.Write(dotExecutionGraph.Last().GenerateDotGraph(null));
-            Console.WriteLine("}");
+            Console.WriteLine(dotFactory.TranslateImperative(dotNodes, dotConnections, Array.Empty<NodeConnection<IDotNode>>()));
             Console.WriteLine();
 
             // Create the same data graph, but now with elements translatable to C#
             var csharpTranslatableFactory = new CSharpTranslatableGraphAlgebra();
-            var csharpTranslatableGraph = CreateDataGraph(csharpTranslatableFactory);
+            (var csharpNodes, var csharpConnections) = CreateDataGraph<Type, ICSharpTranslatableNode, CSharpTranslatableGraphAlgebra>(csharpTranslatableFactory);
 
             Console.WriteLine("--- C# translated graph ---");
-            Console.WriteLine("void Func()");
-            Console.WriteLine("{");
-            foreach (var node in csharpTranslatableGraph)
-            {
-                Console.Write(node.TranslateVariables());
-            }
-            foreach (var node in csharpTranslatableGraph)
-            {
-                Console.Write(node.TranslatePureFunctions());
-            }
+            Console.WriteLine(csharpTranslatableFactory.TranslateImperative(csharpNodes, csharpConnections, Array.Empty<NodeConnection<ICSharpTranslatableNode>>()));
 
-            // Since we don't have any states, translate a call to the last pure node instead.
-            Console.WriteLine(string.Join("\n", csharpTranslatableGraph.Last().TranslateCallPureFunction().Distinct()));
-
-            Console.WriteLine("}");
+            // We can also combine two algebras
+            var tupleFactory = new TupleDataAlgebra<string, Type, IDotNode, ICSharpTranslatableNode>(dotFactory, csharpTranslatableFactory);
+            var tupleGraph = CreateDataGraph<(string, Type), (IDotNode, ICSharpTranslatableNode), TupleDataAlgebra<string, Type, IDotNode, ICSharpTranslatableNode>>(tupleFactory);
         }
 
         private static void Main()

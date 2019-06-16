@@ -7,92 +7,39 @@ using System.Reflection;
 
 namespace ObjectAlgebraExecutionGraphs.Algebras
 {
-    public class EvaluableGraphAlgebra : IDataGraphAlgebra<Type, IEvaluableNode<IEvaluableInputDataPin, IEvaluableOutputDataPin>, IEvaluableInputDataPin, IEvaluableOutputDataPin>
+    public class EvaluableGraphAlgebra : IDataGraphAlgebra<Type, IEvaluableNode>
     {
-        public IEvaluableNode<IEvaluableInputDataPin, IEvaluableOutputDataPin> CreateLiteralNode(Type type, object value)
-            => new LiteralNode(type, value);
+        public IEvaluableNode CreateLiteralNode(Type type, object value) => new LiteralNode(type, value);
 
-        public IEvaluableNode<IEvaluableInputDataPin, IEvaluableOutputDataPin> CreateReverseStringNode(IEvaluableOutputDataPin aFrom)
-            => new ReverseStringNode(aFrom);
+        public IEvaluableNode CreateReverseStringNode() => new ReverseStringNode();
 
         public Type TypeFromString(string typeString) => Type.GetType(typeString);
 
-        private class InputDataPin : IEvaluableInputDataPin
+        private class LiteralNode : IEvaluableNode
         {
-            public Type Type { get; }
-
-            private readonly IEvaluableOutputDataPin incomingOdp;
-
-            public InputDataPin(Type type, IEvaluableOutputDataPin incomingOdp)
-            {
-                this.incomingOdp = incomingOdp;
-                Type = type;
-            }
-
-            public object Evaluate()
-            {
-                return incomingOdp.Evaluate();
-            }
-        }
-
-        private class OutputDataPin : IEvaluableOutputDataPin
-        {
-            public Type Type { get; }
-
-            private readonly IEvaluableNode<IEvaluableInputDataPin, IEvaluableOutputDataPin> node;
-
-            public OutputDataPin(Type type, IEvaluableNode<IEvaluableInputDataPin, IEvaluableOutputDataPin> node)
-            {
-                this.node = node;
-                Type = type;
-            }
-
-            public object Evaluate()
-            {
-                return node.Evaluate()[this];
-            }
-        }
-
-        private abstract class BaseNode : IEvaluableNode<IEvaluableInputDataPin, IEvaluableOutputDataPin>
-        {
-            public IEnumerable<IEvaluableInputDataPin> InputDataPins => idps;
-            public IEnumerable<IEvaluableOutputDataPin> OutputDataPins => odps;
-
-            protected readonly IList<IEvaluableInputDataPin> idps = new List<IEvaluableInputDataPin>();
-            protected readonly IList<IEvaluableOutputDataPin> odps = new List<IEvaluableOutputDataPin>();
-
-            public abstract IReadOnlyDictionary<IEvaluableOutputDataPin, object> Evaluate();
-        }
-
-        private class LiteralNode : BaseNode
-        {
-            private readonly Type type;
             private readonly object value;
 
             public LiteralNode(Type type, object value)
             {
-                this.type = type;
                 this.value = value;
-                odps.Add(new OutputDataPin(type, this));
             }
 
-            public override IReadOnlyDictionary<IEvaluableOutputDataPin, object> Evaluate()
+            public IReadOnlyList<object> Evaluate(IReadOnlyList<object> inputs)
             {
-                return new Dictionary<IEvaluableOutputDataPin, object> { [odps.Single()] = value };
+                if (inputs.Count != 0)
+                {
+                    throw new Exception();
+                }
+
+                return new[] { value };
             }
         }
 
-        private class ReverseStringNode : BaseNode
+        private class ReverseStringNode : IEvaluableNode
         {
-            public ReverseStringNode(IEvaluableOutputDataPin aFrom)
+            public IReadOnlyList<object> Evaluate(IReadOnlyList<object> inputs)
             {
-                idps.Add(new InputDataPin(typeof(string), aFrom));
-                odps.Add(new OutputDataPin(typeof(string), this));
-            }
-
-            public override IReadOnlyDictionary<IEvaluableOutputDataPin, object> Evaluate()
-            {
-                return new Dictionary<IEvaluableOutputDataPin, object>() { [odps.Single()] = string.Concat(((string)idps.Single().Evaluate()).Reverse()) };
+                return new[] { string.Concat(inputs.Cast<string>().Single().Reverse()) };
             }
         }
     }
