@@ -17,6 +17,32 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
         public Type TypeFromString(string typeString) => Type.GetType(typeString);
 
+        private static IEnumerable<string> CallPureDependents(ICSharpTranslatableNode node, IEnumerable<NodeConnection<ICSharpTranslatableNode>> dataConnections)
+        {
+            for (int toIndex = 0; toIndex < node.Inputs.Count; toIndex++)
+            {
+                var conns = dataConnections.Where(conn => conn.ToNode == node && conn.ToPinIndex == toIndex).ToArray();
+                if (conns.Length > 1)
+                {
+                    throw new Exception();
+                }
+
+                if (conns.Length == 1)
+                {
+                    var conn = conns[0];
+                    if (conn.FromNode.IsPure)
+                    {
+                        foreach (var call in CallPureDependents(conn.FromNode, dataConnections))
+                        {
+                            yield return call;
+                        }
+                    }
+
+                    yield return $"{conn.FromNode.PureFunctionName}();\n";
+                }
+            }
+        }
+
         public string TranslateImperative(IEnumerable<ICSharpTranslatableNode> nodes, IEnumerable<NodeConnection<ICSharpTranslatableNode>> dataConnections, IEnumerable<NodeConnection<ICSharpTranslatableNode>> execConnections)
         {
             StringBuilder builder = new StringBuilder();
@@ -26,14 +52,33 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
                 builder.Append(node.TranslateVariables());
             }
 
-            foreach (var node in nodes)
+            foreach (var pureNode in nodes.Where(node => node.IsPure))
             {
-                builder.Append(node.TranslatePureFunctions());
+                builder.Append($"void {pureNode.PureFunctionName}()\n");
+                builder.Append("{\n");
+                builder.Append(pureNode.TranslatePureFunctions());
+                builder.Append("}\n");
             }
 
-            foreach (var node in nodes)
+            foreach (var stateNode in nodes.Where(node => !node.IsPure))
             {
-                builder.Append(node.TranslateStates());
+                IEnumerable<string> pureCalls = CallPureDependents(stateNode, dataConnections);
+
+                if (!stateNode.IsPure)
+                {
+                    var outputConnectedLabels = new string[stateNode.ExecOutputCount];
+
+                    var nodeExecConnections = execConnections
+                        .Where(conn => conn.FromNode == stateNode)
+                        .ToArray();
+
+                    foreach (var execConn in nodeExecConnections)
+                    {
+                        outputConnectedLabels[execConn.FromPinIndex] = execConn.ToNode.ExecInputs[execConn.ToPinIndex];
+                    }
+
+                    builder.Append(stateNode.TranslateStates(outputConnectedLabels, string.Concat(pureCalls.Distinct())));
+                }
             }
 
             return builder.ToString();
@@ -43,6 +88,8 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
         {
             public IImmutableList<(Type type, string variableName)> Inputs { get; private set; } = ImmutableList<(Type, string)>.Empty;
             public IImmutableList<(Type type, string variableName)> Outputs { get; private set; } = ImmutableList<(Type, string)>.Empty;
+            public IImmutableList<string> ExecInputs { get; private set; } = ImmutableList<string>.Empty;
+            public int ExecOutputCount { get; private set; }
 
             public virtual bool IsPure { get; }
             public string PureFunctionName { get; }
@@ -57,10 +104,12 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
             public virtual string TranslatePureFunctions() => "";
 
-            public virtual string TranslateStates() => "";
+            public virtual string TranslateStates(IReadOnlyList<string> outputExecLabels, string pureCalls) => "";
 
             protected void AddInput(Type type) => Inputs = Inputs.Add((type, RandomGenerator.GetRandomLowerLetters(8)));
             protected void AddOutput(Type type) => Outputs = Outputs.Add((type, RandomGenerator.GetRandomLowerLetters(8)));
+            protected void AddExecInput() => ExecInputs = ExecInputs.Add(RandomGenerator.GetRandomLowerLetters(8));
+            protected void AddExecOutput() => ExecOutputCount++;
         }
 
         private class ConcatenateNode : BaseCSharpTranslatableNode
@@ -70,9 +119,30 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
                 AddInput(typeof(string));
                 AddInput(typeof(string));
                 AddOutput(typeof(string));
+                AddExecInput();
+                AddExecOutput();
             }
 
-            public override string TranslateStates() => $"{Outputs.Single().variableName} = {Inputs[0].variableName} + \" \" + {Inputs[1].variableName};\n";
+            public override string TranslateStates(IReadOnlyList<string> outputExecLabels, string pureCalls)
+            {
+                StringBuilder builder = new StringBuilder();
+
+                builder.Append($"{ExecInputs[0]}:\n");
+                builder.Append(pureCalls);
+                builder.Append($"{Outputs.Single().variableName} = {Inputs[0].variableName} + \" \" + {Inputs[1].variableName};\n");
+
+                var outputLabel = outputExecLabels.Single();
+                if (outputLabel != null)
+                {
+                    builder.Append($"goto {outputLabel};\n");
+                }
+                else
+                {
+                    builder.Append("return;\n");
+                }
+
+                return builder.ToString();
+            }
         }
 
         private class LiteralNode : BaseCSharpTranslatableNode

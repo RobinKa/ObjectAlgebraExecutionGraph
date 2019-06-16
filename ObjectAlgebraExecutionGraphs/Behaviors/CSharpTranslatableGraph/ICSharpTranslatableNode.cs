@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
 {
@@ -7,6 +9,11 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
     /// </summary>
     public interface ICSharpTranslatableNode
     {
+        public IImmutableList<(Type type, string variableName)> Inputs { get; }
+        public IImmutableList<(Type type, string variableName)> Outputs { get; }
+        public IImmutableList<string> ExecInputs { get; }
+        public int ExecOutputCount { get; }
+
         /// <summary>
         /// Translate all variables of this node to code.
         /// </summary>
@@ -23,7 +30,7 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
         /// Translate this node's stateful operations (ie. node with execution pins) into code.
         /// </summary>
         /// <returns>Code for the stateful operations of this node.</returns>
-        public string TranslateStates();
+        public string TranslateStates(IReadOnlyList<string> outputExecLabels, string pureCalls);
 
         /// <summary>
         /// Whether this node is pure (ie. has no execution pins of its own but is executed
