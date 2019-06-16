@@ -37,7 +37,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
             public virtual string TranslatePureFunctions() => "";
 
-            public virtual string TranslateStates(IReadOnlyList<string> outputExecLabels, string pureCalls) => "";
+            public virtual string TranslateStates(IImmutableList<string> outputExecLabels, string pureCalls) => "";
 
             protected void AddInput(Type type) => Inputs = Inputs.Add((type, RandomGenerator.GetRandomLowerLetters(8)));
             protected void AddOutput(Type type) => Outputs = Outputs.Add((type, RandomGenerator.GetRandomLowerLetters(8)));
@@ -56,7 +56,7 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
                 AddExecOutput();
             }
 
-            public override string TranslateStates(IReadOnlyList<string> outputExecLabels, string pureCalls)
+            public override string TranslateStates(IImmutableList<string> outputExecLabels, string pureCalls)
             {
                 StringBuilder builder = new StringBuilder();
 

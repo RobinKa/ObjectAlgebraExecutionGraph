@@ -6,6 +6,7 @@ using ObjectAlgebraExecutionGraphs.Utility;
 using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
@@ -13,7 +14,7 @@ namespace ObjectAlgebraExecutionGraphs
 {
     internal static class Program
     {
-        private static (IEnumerable<TNode> nodes, IEnumerable<NodeConnection<TNode>> dataConnections) CreateDataGraph<TType, TNode, TFactory>(TFactory factory)
+        private static (IImmutableList<TNode> nodes, IImmutableList<NodeConnection<TNode>> dataConnections) CreateDataGraph<TType, TNode, TFactory>(TFactory factory)
             where TFactory : IDataGraphAlgebra<TType, TNode>
         {
             var literalType = factory.TypeFromString(typeof(string).AssemblyQualifiedName);
@@ -24,10 +25,10 @@ namespace ObjectAlgebraExecutionGraphs
             var literalToReverse = new NodeConnection<TNode>(literalNode, 0, reverseStringNode, 0);
             var reverseToReverse2 = new NodeConnection<TNode>(reverseStringNode, 0, reverseStringNode2, 0);
 
-            return (new[] { literalNode, reverseStringNode, reverseStringNode2 }, new[] { literalToReverse, reverseToReverse2 });
+            return (ImmutableArray.Create(literalNode, reverseStringNode, reverseStringNode2), ImmutableArray.Create(literalToReverse, reverseToReverse2));
         }
 
-        private static (IEnumerable<TNode> nodes, IEnumerable<NodeConnection<TNode>> dataConnections, IReadOnlyList<NodeConnection<TNode>> execConnections) CreateExecutionGraph<TType, TNode, TFactory>(TFactory factory)
+        private static (IImmutableList<TNode> nodes, IImmutableList<NodeConnection<TNode>> dataConnections, IImmutableList<NodeConnection<TNode>> execConnections) CreateExecutionGraph<TType, TNode, TFactory>(TFactory factory)
             where TFactory : IDataGraphAlgebra<TType, TNode>, IExecutionGraphAlgebra<TType, TNode>
         {
             var literalType = factory.TypeFromString(typeof(string).AssemblyQualifiedName);
@@ -39,7 +40,7 @@ namespace ObjectAlgebraExecutionGraphs
             var literalToConcatenate = new NodeConnection<TNode>(literalNode, 0, concatenateNode, 0);
             var reverseToConcatenate = new NodeConnection<TNode>(reverseStringNode, 0, concatenateNode, 1);
 
-            return (new[] { literalNode, reverseStringNode, concatenateNode }, new[] { literalToReverse, literalToConcatenate, reverseToConcatenate }, Array.Empty<NodeConnection<TNode>>());
+            return (ImmutableArray.Create(literalNode, reverseStringNode, concatenateNode), ImmutableArray.Create(literalToReverse, literalToConcatenate, reverseToConcatenate), ImmutableArray<NodeConnection<TNode>>.Empty);
         }
 
         private static void RunExecutionGraphExamples()
@@ -76,7 +77,7 @@ namespace ObjectAlgebraExecutionGraphs
             var dotFactory = new DotExecutionGraphAlgebra();
             (var dotNodes, var dotConnections) = CreateDataGraph<string, IDotNode, DotExecutionGraphAlgebra>(dotFactory);
             Console.WriteLine("--- DOT graph ---");
-            Console.WriteLine(TranslateToDotGraph(dotNodes, dotConnections, Array.Empty<NodeConnection<IDotNode>>()));
+            Console.WriteLine(TranslateToDotGraph(dotNodes, dotConnections, ImmutableArray<NodeConnection<IDotNode>>.Empty));
             Console.WriteLine();
 
             // Create the same data graph, but now with elements translatable to C#
@@ -84,7 +85,7 @@ namespace ObjectAlgebraExecutionGraphs
             (var csharpNodes, var csharpConnections) = CreateDataGraph<Type, ICSharpTranslatableNode, CSharpTranslatableGraphAlgebra>(csharpTranslatableFactory);
 
             Console.WriteLine("--- C# translated graph ---");
-            Console.WriteLine(TranslateToCSharp(csharpNodes, csharpConnections, Array.Empty<NodeConnection<ICSharpTranslatableNode>>()));
+            Console.WriteLine(TranslateToCSharp(csharpNodes, csharpConnections, ImmutableArray<NodeConnection<ICSharpTranslatableNode>>.Empty));
 
             // We can also combine two algebras
             var tupleFactory = new TupleDataAlgebra<string, Type, IDotNode, ICSharpTranslatableNode>(dotFactory, csharpTranslatableFactory);
@@ -100,10 +101,10 @@ namespace ObjectAlgebraExecutionGraphs
             RunExecutionGraphExamples();
         }
 
-        private static string TranslateToDotGraph(IEnumerable<IDotNode> nodes, IEnumerable<NodeConnection<IDotNode>> dataConnections, IEnumerable<NodeConnection<IDotNode>> execConnections)
+        private static string TranslateToDotGraph(IImmutableList<IDotNode> nodes, IImmutableList<NodeConnection<IDotNode>> dataConnections, IImmutableList<NodeConnection<IDotNode>> execConnections)
             => $"digraph graph {{\n{string.Join("\n", dataConnections.Concat(execConnections).Distinct().Select(conn => $"{conn.FromNode.DotName} -> {conn.ToNode.DotName}"))}\n}}";
 
-        private static IEnumerable<string> CallPureDependents(ICSharpTranslatableNode node, IEnumerable<NodeConnection<ICSharpTranslatableNode>> dataConnections)
+        private static IEnumerable<string> CallPureDependents(ICSharpTranslatableNode node, IImmutableList<NodeConnection<ICSharpTranslatableNode>> dataConnections)
         {
             for (int toIndex = 0; toIndex < node.Inputs.Count; toIndex++)
             {
@@ -129,7 +130,7 @@ namespace ObjectAlgebraExecutionGraphs
             }
         }
 
-        private static string TranslateToCSharp(IEnumerable<ICSharpTranslatableNode> nodes, IEnumerable<NodeConnection<ICSharpTranslatableNode>> dataConnections, IEnumerable<NodeConnection<ICSharpTranslatableNode>> execConnections)
+        private static string TranslateToCSharp(IImmutableList<ICSharpTranslatableNode> nodes, IImmutableList<NodeConnection<ICSharpTranslatableNode>> dataConnections, IImmutableList<NodeConnection<ICSharpTranslatableNode>> execConnections)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -148,7 +149,7 @@ namespace ObjectAlgebraExecutionGraphs
 
             foreach (var stateNode in nodes.Where(node => !node.IsPure))
             {
-                IEnumerable<string> pureCalls = CallPureDependents(stateNode, dataConnections);
+                IImmutableList<string> pureCalls = CallPureDependents(stateNode, dataConnections).ToImmutableArray();
 
                 if (!stateNode.IsPure)
                 {
@@ -163,7 +164,7 @@ namespace ObjectAlgebraExecutionGraphs
                         outputConnectedLabels[execConn.FromPinIndex] = execConn.ToNode.ExecInputs[execConn.ToPinIndex];
                     }
 
-                    builder.Append(stateNode.TranslateStates(outputConnectedLabels, string.Concat(pureCalls.Distinct())));
+                    builder.Append(stateNode.TranslateStates(outputConnectedLabels.ToImmutableArray(), string.Concat(pureCalls.Distinct())));
                 }
             }
 

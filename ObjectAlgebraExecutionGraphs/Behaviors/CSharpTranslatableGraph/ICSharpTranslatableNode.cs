@@ -30,7 +30,7 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
         /// Translate this node's stateful operations (ie. node with execution pins) into code.
         /// </summary>
         /// <returns>Code for the stateful operations of this node.</returns>
-        public string TranslateStates(IReadOnlyList<string> outputExecLabels, string pureCalls);
+        public string TranslateStates(IImmutableList<string> outputExecLabels, string pureCalls);
 
         /// <summary>
         /// Whether this node is pure (ie. has no execution pins of its own but is executed

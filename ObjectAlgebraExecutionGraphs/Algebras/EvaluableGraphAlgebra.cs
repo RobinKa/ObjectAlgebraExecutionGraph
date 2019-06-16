@@ -2,6 +2,7 @@
 using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace ObjectAlgebraExecutionGraphs.Algebras
@@ -23,22 +24,22 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
                 this.value = value;
             }
 
-            public IReadOnlyList<object> Evaluate(IReadOnlyList<object> inputs)
+            public IImmutableList<object> Evaluate(IImmutableList<object> inputs)
             {
                 if (inputs.Count != 0)
                 {
                     throw new Exception();
                 }
 
-                return new[] { value };
+                return ImmutableArray.Create(value);
             }
         }
 
         private class ReverseStringNode : IEvaluableNode
         {
-            public IReadOnlyList<object> Evaluate(IReadOnlyList<object> inputs)
+            public IImmutableList<object> Evaluate(IImmutableList<object> inputs)
             {
-                return new[] { string.Concat(inputs.Cast<string>().Single().Reverse()) };
+                return ImmutableArray.Create<object>(string.Concat(inputs.Cast<string>().Single().Reverse()));
             }
         }
     }

@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.EvaluableGraph
 {
     public interface IEvaluableNode
     {
-        public IReadOnlyList<object> Evaluate(IReadOnlyList<object> inputs);
+        public IImmutableList<object> Evaluate(IImmutableList<object> inputs);
     }
 }
