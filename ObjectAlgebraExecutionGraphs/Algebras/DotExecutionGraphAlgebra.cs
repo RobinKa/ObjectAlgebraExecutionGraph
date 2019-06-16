@@ -17,9 +17,6 @@ namespace ObjectAlgebraExecutionGraphs.Algebras
 
         public string TypeFromString(string typeString) => typeString;
 
-        public string TranslateImperative(IEnumerable<IDotNode> nodes, IEnumerable<NodeConnection<IDotNode>> dataConnections, IEnumerable<NodeConnection<IDotNode>> execConnections)
-            => $"digraph graph {{\n{string.Join("\n", dataConnections.Concat(execConnections).Distinct().Select(conn => $"{conn.FromNode.DotName} -> {conn.ToNode.DotName}"))}\n}}";
-
         private class DotNode : IDotNode
         {
             public string DotName { get; }

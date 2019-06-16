@@ -6,6 +6,8 @@ using ObjectAlgebraExecutionGraphs.Utility;
 using ObjectAlgebraExecutionGraphs.Variants;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace ObjectAlgebraExecutionGraphs
 {
@@ -46,7 +48,7 @@ namespace ObjectAlgebraExecutionGraphs
             var dotFactory = new DotExecutionGraphAlgebra();
             var dotExecutionGraph = CreateExecutionGraph<string, IDotNode, DotExecutionGraphAlgebra>(dotFactory);
             Console.WriteLine("--- DOT graph ---");
-            Console.WriteLine(dotFactory.TranslateImperative(dotExecutionGraph.nodes, dotExecutionGraph.dataConnections, dotExecutionGraph.execConnections));
+            Console.WriteLine(TranslateToDotGraph(dotExecutionGraph.nodes, dotExecutionGraph.dataConnections, dotExecutionGraph.execConnections));
             Console.WriteLine();
 
             // Create the same execution graph, but now with elements translatable to C#
@@ -54,7 +56,7 @@ namespace ObjectAlgebraExecutionGraphs
             var csharpTranslatableGraph = CreateExecutionGraph<Type, ICSharpTranslatableNode, CSharpTranslatableGraphAlgebra>(csharpTranslatableFactory);
 
             Console.WriteLine("--- C# translated graph ---");
-            Console.WriteLine(csharpTranslatableFactory.TranslateImperative(csharpTranslatableGraph.nodes, csharpTranslatableGraph.dataConnections, csharpTranslatableGraph.execConnections));
+            Console.WriteLine(TranslateToCSharp(csharpTranslatableGraph.nodes, csharpTranslatableGraph.dataConnections, csharpTranslatableGraph.execConnections));
         }
 
         private static void RunDataGraphExamples()
@@ -74,7 +76,7 @@ namespace ObjectAlgebraExecutionGraphs
             var dotFactory = new DotExecutionGraphAlgebra();
             (var dotNodes, var dotConnections) = CreateDataGraph<string, IDotNode, DotExecutionGraphAlgebra>(dotFactory);
             Console.WriteLine("--- DOT graph ---");
-            Console.WriteLine(dotFactory.TranslateImperative(dotNodes, dotConnections, Array.Empty<NodeConnection<IDotNode>>()));
+            Console.WriteLine(TranslateToDotGraph(dotNodes, dotConnections, Array.Empty<NodeConnection<IDotNode>>()));
             Console.WriteLine();
 
             // Create the same data graph, but now with elements translatable to C#
@@ -82,7 +84,7 @@ namespace ObjectAlgebraExecutionGraphs
             (var csharpNodes, var csharpConnections) = CreateDataGraph<Type, ICSharpTranslatableNode, CSharpTranslatableGraphAlgebra>(csharpTranslatableFactory);
 
             Console.WriteLine("--- C# translated graph ---");
-            Console.WriteLine(csharpTranslatableFactory.TranslateImperative(csharpNodes, csharpConnections, Array.Empty<NodeConnection<ICSharpTranslatableNode>>()));
+            Console.WriteLine(TranslateToCSharp(csharpNodes, csharpConnections, Array.Empty<NodeConnection<ICSharpTranslatableNode>>()));
 
             // We can also combine two algebras
             var tupleFactory = new TupleDataAlgebra<string, Type, IDotNode, ICSharpTranslatableNode>(dotFactory, csharpTranslatableFactory);
@@ -96,6 +98,76 @@ namespace ObjectAlgebraExecutionGraphs
 
             Console.WriteLine("### Execution graph examples ###");
             RunExecutionGraphExamples();
+        }
+
+        private static string TranslateToDotGraph(IEnumerable<IDotNode> nodes, IEnumerable<NodeConnection<IDotNode>> dataConnections, IEnumerable<NodeConnection<IDotNode>> execConnections)
+            => $"digraph graph {{\n{string.Join("\n", dataConnections.Concat(execConnections).Distinct().Select(conn => $"{conn.FromNode.DotName} -> {conn.ToNode.DotName}"))}\n}}";
+
+        private static IEnumerable<string> CallPureDependents(ICSharpTranslatableNode node, IEnumerable<NodeConnection<ICSharpTranslatableNode>> dataConnections)
+        {
+            for (int toIndex = 0; toIndex < node.Inputs.Count; toIndex++)
+            {
+                var conns = dataConnections.Where(conn => conn.ToNode == node && conn.ToPinIndex == toIndex).ToArray();
+                if (conns.Length > 1)
+                {
+                    throw new Exception();
+                }
+
+                if (conns.Length == 1)
+                {
+                    var conn = conns[0];
+                    if (conn.FromNode.IsPure)
+                    {
+                        foreach (var call in CallPureDependents(conn.FromNode, dataConnections))
+                        {
+                            yield return call;
+                        }
+                    }
+
+                    yield return $"{conn.FromNode.PureFunctionName}();\n";
+                }
+            }
+        }
+
+        private static string TranslateToCSharp(IEnumerable<ICSharpTranslatableNode> nodes, IEnumerable<NodeConnection<ICSharpTranslatableNode>> dataConnections, IEnumerable<NodeConnection<ICSharpTranslatableNode>> execConnections)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (var node in nodes)
+            {
+                builder.Append(node.TranslateVariables());
+            }
+
+            foreach (var pureNode in nodes.Where(node => node.IsPure))
+            {
+                builder.Append($"void {pureNode.PureFunctionName}()\n");
+                builder.Append("{\n");
+                builder.Append(pureNode.TranslatePureFunctions());
+                builder.Append("}\n");
+            }
+
+            foreach (var stateNode in nodes.Where(node => !node.IsPure))
+            {
+                IEnumerable<string> pureCalls = CallPureDependents(stateNode, dataConnections);
+
+                if (!stateNode.IsPure)
+                {
+                    var outputConnectedLabels = new string[stateNode.ExecOutputCount];
+
+                    var nodeExecConnections = execConnections
+                        .Where(conn => conn.FromNode == stateNode)
+                        .ToArray();
+
+                    foreach (var execConn in nodeExecConnections)
+                    {
+                        outputConnectedLabels[execConn.FromPinIndex] = execConn.ToNode.ExecInputs[execConn.ToPinIndex];
+                    }
+
+                    builder.Append(stateNode.TranslateStates(outputConnectedLabels, string.Concat(pureCalls.Distinct())));
+                }
+            }
+
+            return builder.ToString();
         }
     }
 }
