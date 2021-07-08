@@ -1,17 +1,19 @@
-﻿using ObjectAlgebraExecutionGraphs.Behaviors.ExecutionGraph;
+﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
 {
     /// <summary>
     /// Node that is translatable to C#.
     /// </summary>
-    /// <typeparam name="TIXP">Input execution pin type</typeparam>
-    /// <typeparam name="TOXP">Output execution pin type</typeparam>
-    /// <typeparam name="TIDP">Input data pin type</typeparam>
-    /// <typeparam name="TODP">Output data pin type</typeparam>
-    public interface ICSharpTranslatableNode<TIXP, TOXP, TIDP, TODP> : IExecutionNode<TIXP, TOXP, TIDP, TODP>
+    public interface ICSharpTranslatableNode
     {
+        public IImmutableList<(Type type, string variableName)> Inputs { get; }
+        public IImmutableList<(Type type, string variableName)> Outputs { get; }
+        public IImmutableList<string> ExecInputs { get; }
+        public int ExecOutputCount { get; }
+
         /// <summary>
         /// Translate all variables of this node to code.
         /// </summary>
@@ -28,7 +30,7 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
         /// Translate this node's stateful operations (ie. node with execution pins) into code.
         /// </summary>
         /// <returns>Code for the stateful operations of this node.</returns>
-        public string TranslateStates();
+        public string TranslateStates(IImmutableList<string> outputExecLabels, string pureCalls);
 
         /// <summary>
         /// Whether this node is pure (ie. has no execution pins of its own but is executed
@@ -40,11 +42,5 @@ namespace ObjectAlgebraExecutionGraphs.Behaviors.CSharpTranslatableGraph
         /// Name of this node's local function if it is pure.
         /// </summary>
         public string PureFunctionName { get; }
-
-        /// <summary>
-        /// Translates to code that calls this node's local function.
-        /// </summary>
-        /// <returns>Code for calling this node's local function.</returns>
-        public IEnumerable<string> TranslateCallPureFunction();
     }
 }
